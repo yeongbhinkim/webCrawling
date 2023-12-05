@@ -1,28 +1,50 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime, timedelta
+from selenium.webdriver.chrome.options import Options
+
 import time
+import os
+import logging
+
+# 로그 설정
+logging.basicConfig(filename='selenium_log.log', level=logging.INFO,
+                    format='%(asctime)s: %(levelname)s: %(message)s')
 
 # 크롬 드라이버 경로 설정
-chrome_driver_path = 'c:/Users/fkdle/Downloads/pa/chromedriver_win32/chromedriver.exe'  # 여기에 실제 chromedriver.exe 경로를 지정해야 합니다.
+chrome_driver_path = 'C:/Users/yb/Desktop/pa/webCrawling/chromedriver_win32/chromedriver.exe'
 
-# 다운로드 폴더 설정
-download_folder = "C:/Users/fkdle/Desktop/pa/Downloads"
+# 다운로드 폴더 설정 C:\Users\yb\Downloads
+download_folder = "C:/Users/yb/Desktop/pa/webCrawling/Download"
+# download_folder = "C:/Users/yb/Downloads"
 
 # 옵션 설정
-chrome_options = webdriver.ChromeOptions()
-prefs = {"download.default_directory": download_folder}
+chrome_options = Options()
+# chrome_options.add_argument("--headless")  # 헤드리스 모드 활성화
+# chrome_options.add_argument("--disable-gpu")  # 일부 시스템에서 필요
+# chrome_options.add_argument("--window-size=1920,1080")  # 필요한 경우 창 크기 지정
+
+prefs = {
+    "download.default_directory": download_folder,
+    "download.prompt_for_download": False,
+    "download.directory_upgrade": True,
+    "safebrowsing.enabled": True,
+    "plugins.always_open_pdf_externally": True,
+    "safebrowsing_for_trusted_sources_enabled": False,
+}
 chrome_options.add_experimental_option("prefs", prefs)
+# chrome_options.add_argument("--disable-gpu")
+# chrome_options.add_argument("--no-sandbox")
+# chrome_options.add_argument("--log-level=3")
 
 # 드라이버 서비스 설정
-service = Service(executable_path=chrome_driver_path)
+service = Service(executable_path=chrome_driver_path, log_path=os.path.join(download_folder, 'chromedriver.log'))
 
 # 웹 드라이버 설정
 driver = webdriver.Chrome(service=service, options=chrome_options)
-
 
 def handle_popups(driver):
     # 현재 창 핸들 저장
@@ -46,30 +68,67 @@ def handle_popups(driver):
         pass  # 경고창이 없으면 무시
 
 def download_files(start_date, end_date, driver, wait):
-    # 날짜 입력
-    wait.until(EC.visibility_of_element_located((By.ID, "searchFromDt"))).send_keys(start_date.strftime("%Y%m%d"))
-    wait.until(EC.visibility_of_element_located((By.ID, "searchToDt"))).send_keys(end_date.strftime("%Y%m%d"))
+    try:
+    
+        # 팝업 처리
+        handle_popups(driver)
 
-    # 팝업 처리
-    handle_popups(driver)
+        # iframe으로 전환
+        wait.until(EC.frame_to_be_available_and_switch_to_it((By.TAG_NAME, 'iframe')))
+        
+        # 날짜 입력
+        wait.until(EC.visibility_of_element_located((By.ID, "searchFromDt"))).clear()
+        wait.until(EC.visibility_of_element_located((By.ID, "searchFromDt"))).send_keys(start_date.strftime("%Y%m%d"))
+        wait.until(EC.visibility_of_element_located((By.ID, "searchToDt"))).clear()
+        wait.until(EC.visibility_of_element_located((By.ID, "searchToDt"))).send_keys(end_date.strftime("%Y%m%d"))
 
-    # 파일 형식 선택 (CSV)
-    driver.find_element(By.ID, "fileType").click()
-    driver.find_element(By.CSS_SELECTOR, "option[value='CSV']").click()
+        # 파일 형식 선택 (CSV)
+        driver.find_element(By.ID, "fileType").click()
+        driver.find_element(By.CSS_SELECTOR, "option[value='CSV']").click()
 
-    # 다운로드 버튼 클릭
-    driver.find_element(By.CSS_SELECTOR, "a[onclick*='fn_load(fileType)']").click()
+        # 다운로드 버튼 클릭
+        driver.find_element(By.CSS_SELECTOR, "a[onclick*='fn_load(fileType)']").click() 
 
-    # 파일 다운로드 대기
-    time.sleep(10)  # 실제 환경에 맞게 대기 시간을 조정해야 합니다.
+        # 로그 기록
+        logging.info(f"다운로드 시도: {start_date.strftime('%Y%m%d')} - {end_date.strftime('%Y%m%d')}")
+
+
+        # iframe에서 나가기
+        driver.switch_to.default_content()
+
+        # 파일 다운로드 대기
+        time.sleep(10)  # 실제 환경에 맞게 대기 시간을 조정해야 합니다.
+
+        # 다운로드 버튼 클릭 후, 파일 다운로드가 완료될 때까지 대기
+        wait_for_download(wait, download_folder)
+
+    except Exception as e:
+        logging.exception(f"다운로드 중 오류 발생: {e}")
+
+def wait_for_download(wait, download_folder):
+    # 다운로드 폴더에서 파일이 나타날 때까지 대기
+    end_time = time.time() + 60  # 최대 60초 대기
+    while True:
+        time.sleep(1)  # 매초 확인
+        files = [filename for filename in os.listdir(download_folder) if filename.endswith('.csv')]
+        if files:  # 파일이 하나라도 존재하면 다운로드가 시작됐다고 가정
+            print('다운로드 시작됨:', files)
+            break
+        elif time.time() > end_time:
+            raise Exception('다운로드 타임아웃')
+    # 모든 파일의 다운로드가 완료될 때까지 추가 대기
+    for file in files:
+        filepath = os.path.join(download_folder, file)
+        while not os.path.isfile(filepath):
+            time.sleep(1)  # 파일이 나타날 때까지 대기
+        print(f'{file} 다운로드 완료')
+
 
 try:
     # 목표 웹 페이지 접속
     driver.get('https://rtdown.molit.go.kr/')
-
-    # 대기 설정
-    wait = WebDriverWait(driver, 100)
-
+    # # 대기 설정
+    wait = WebDriverWait(driver, 100)    
     # 1996년1월 01일부터 시작하여 현재까지 각 달의 첫 날과 마지막 날을 사용하여 파일 다운로드
     start_year = 1996
     end_year = datetime.now().year
@@ -86,6 +145,8 @@ try:
                 start_month = 1
                 break  # 다음 연도로 넘어갑니다.
 
+except Exception as e:
+    print(f'에러 발생: {e}')
 finally:
     # 브라우저 종료
     driver.quit()

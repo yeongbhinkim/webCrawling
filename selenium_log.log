@@ -1,0 +1,26 @@
+2023-12-05 21:46:28,262: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 21:53:27,228: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 21:53:51,574: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 21:54:17,434: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 21:54:34,204: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 21:55:40,722: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 21:56:16,940: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 21:57:26,990: ERROR: 다운로드 중 오류 발생: 다운로드 타임아웃
+Traceback (most recent call last):
+  File "c:\Users\yb\Desktop\pa\webCrawling\webCrawling.py", line 102, in download_files
+    wait_for_download(wait, download_folder)
+  File "c:\Users\yb\Desktop\pa\webCrawling\webCrawling.py", line 117, in wait_for_download
+    raise Exception('다운로드 타임아웃')
+Exception: 다운로드 타임아웃
+2023-12-05 21:57:27,392: INFO: 다운로드 시도: 19960201 - 19960229
+2023-12-05 21:58:37,432: ERROR: 다운로드 중 오류 발생: 다운로드 타임아웃
+Traceback (most recent call last):
+  File "c:\Users\yb\Desktop\pa\webCrawling\webCrawling.py", line 102, in download_files
+    wait_for_download(wait, download_folder)
+  File "c:\Users\yb\Desktop\pa\webCrawling\webCrawling.py", line 117, in wait_for_download
+    raise Exception('다운로드 타임아웃')
+Exception: 다운로드 타임아웃
+2023-12-05 21:58:37,924: INFO: 다운로드 시도: 19960301 - 19960331
+2023-12-05 22:00:05,914: INFO: 다운로드 시도: 19960101 - 19960131
+2023-12-05 22:00:17,292: INFO: 다운로드 시도: 19960201 - 19960229
+2023-12-05 22:06:52,092: INFO: 다운로드 시도: 19960101 - 19960131
