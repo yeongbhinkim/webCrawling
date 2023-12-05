@@ -26,26 +26,36 @@ chrome_options = Options()
 # chrome_options.add_argument("--headless")  # 헤드리스 모드 활성화
 # chrome_options.add_argument("--disable-gpu")  # 일부 시스템에서 필요
 # chrome_options.add_argument("--window-size=1920,1080")  # 필요한 경우 창 크기 지정
+# chrome_options.add_argument("--disable-popup-blocking")
+# chrome_options.add_argument("--disable-extensions")
+# chrome_options.add_argument("--no-sandbox")
+
 
 prefs = {
     "download.default_directory": download_folder,
     "download.prompt_for_download": False,
     "download.directory_upgrade": True,
     "safebrowsing.enabled": True,
-    "plugins.always_open_pdf_externally": True,
     "safebrowsing_for_trusted_sources_enabled": False,
 }
+# "plugins.always_open_pdf_externally": True,
 chrome_options.add_experimental_option("prefs", prefs)
 # chrome_options.add_argument("--disable-gpu")
 # chrome_options.add_argument("--no-sandbox")
-# chrome_options.add_argument("--log-level=3")
+chrome_options.add_argument("--log-level=3")
 
 # 드라이버 서비스 설정
 service = Service(executable_path=chrome_driver_path, log_path=os.path.join(download_folder, 'chromedriver.log'))
 
+def setting_chrome_options():
+    print('옵션 설정')
+    options = webdriver.ChromeOptions()
+    options.add_argument('headless') # 백그라운드 작업
+    return options
+
 # 웹 드라이버 설정
 driver = webdriver.Chrome(service=service, options=chrome_options)
-
+# driver = webdriver.Chrome(service=service,options=setting_chrome_options())
 def handle_popups(driver):
     # 현재 창 핸들 저장
     main_window_handle = driver.current_window_handle
@@ -86,6 +96,8 @@ def download_files(start_date, end_date, driver, wait):
         driver.find_element(By.ID, "fileType").click()
         driver.find_element(By.CSS_SELECTOR, "option[value='CSV']").click()
 
+        # time.sleep(2)  # 실제 환경에 맞게 대기 시간을 조정해야 합니다.
+
         # 다운로드 버튼 클릭
         driver.find_element(By.CSS_SELECTOR, "a[onclick*='fn_load(fileType)']").click() 
 
@@ -100,7 +112,7 @@ def download_files(start_date, end_date, driver, wait):
         time.sleep(10)  # 실제 환경에 맞게 대기 시간을 조정해야 합니다.
 
         # 다운로드 버튼 클릭 후, 파일 다운로드가 완료될 때까지 대기
-        wait_for_download(wait, download_folder)
+        # wait_for_download(wait, download_folder)
 
     except Exception as e:
         logging.exception(f"다운로드 중 오류 발생: {e}")
