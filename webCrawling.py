@@ -19,6 +19,7 @@ chrome_driver_path = 'C:/Users/yb/Desktop/pa/webCrawling/chromedriver_win32/chro
 
 # 다운로드 폴더 설정 C:\Users\yb\Downloads
 download_folder = "C:/Users/yb/Desktop/pa/webCrawling/Download"
+# download_folder = "C:/Users/yb/Desktop/pa/webCrawling"
 # download_folder = "C:/Users/yb/Downloads"
 
 # 옵션 설정
@@ -32,7 +33,7 @@ chrome_options = Options()
 
 
 prefs = {
-    "download.default_directory": download_folder,
+    # "download.default_directory": download_folder,
     "download.prompt_for_download": False,
     "download.directory_upgrade": True,
     "safebrowsing.enabled": True,
@@ -40,8 +41,7 @@ prefs = {
 }
 # "plugins.always_open_pdf_externally": True,
 chrome_options.add_experimental_option("prefs", prefs)
-# chrome_options.add_argument("--disable-gpu")
-# chrome_options.add_argument("--no-sandbox")
+
 chrome_options.add_argument("--log-level=3")
 
 # 드라이버 서비스 설정
@@ -54,6 +54,8 @@ def setting_chrome_options():
     return options
 
 # 웹 드라이버 설정
+
+
 driver = webdriver.Chrome(service=service, options=chrome_options)
 # driver = webdriver.Chrome(service=service,options=setting_chrome_options())
 def handle_popups(driver):
@@ -109,7 +111,7 @@ def download_files(start_date, end_date, driver, wait):
         driver.switch_to.default_content()
 
         # 파일 다운로드 대기
-        time.sleep(10)  # 실제 환경에 맞게 대기 시간을 조정해야 합니다.
+        time.sleep(20)  # 실제 환경에 맞게 대기 시간을 조정해야 합니다.
 
         # 다운로드 버튼 클릭 후, 파일 다운로드가 완료될 때까지 대기
         # wait_for_download(wait, download_folder)
@@ -121,7 +123,7 @@ def wait_for_download(wait, download_folder):
     # 다운로드 폴더에서 파일이 나타날 때까지 대기
     end_time = time.time() + 60  # 최대 60초 대기
     while True:
-        time.sleep(1)  # 매초 확인
+        time.sleep(3)  # 매초 확인
         files = [filename for filename in os.listdir(download_folder) if filename.endswith('.csv')]
         if files:  # 파일이 하나라도 존재하면 다운로드가 시작됐다고 가정
             print('다운로드 시작됨:', files)
@@ -139,12 +141,13 @@ def wait_for_download(wait, download_folder):
 try:
     # 목표 웹 페이지 접속
     driver.get('https://rtdown.molit.go.kr/')
+    # driver.get('https://rtdown.molit.go.kr/countLog.do#')
     # # 대기 설정
     wait = WebDriverWait(driver, 100)    
     # 1996년1월 01일부터 시작하여 현재까지 각 달의 첫 날과 마지막 날을 사용하여 파일 다운로드
-    start_year = 1996
+    start_year = 2013
     end_year = datetime.now().year
-    start_month = 1  # 시작 월
+    start_month = 11  # 시작 월
 
     for year in range(start_year, end_year + 1):
         for month in range(start_month, 13):
